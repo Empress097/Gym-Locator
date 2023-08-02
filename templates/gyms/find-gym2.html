@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<div class="container-fluid position-relative p-0">
+    <div class="container-fluid bg-primary py-5 hero-header">
+        <div class="container-fluid">
+            <div class="row py-2">
+                 <div class="col-sm-5 pt-lg-4 mt-lg-4">
+                     <div class="container-fluid bg-white " style="border-radius: 10px;">
+                         <div class="row justify-content-center py-2 mb-2 ">
+                             <div class="col">
+                                 <div class="position-relative w-100 mt-3">
+                                     <input class="form-control border border-1 w-100 rounded-pill py-3 ps-4 pe-5" type="text" placeholder="Search for...">
+                                     <button type="button" class="btn btn-primary py-2 position-absolute rounded-pill top-0 end-0 me-2" style="margin-top: 7px;"><i class="bi bi-search"></i></button>
+                                 </div>
+                             </div>
+                         </div>
+                         <div class="row py-2 mb-2">
+                             <div class="col">
+                                 <select id="rating-filter" class="form-select form-select-sm" aria-label=".form-select-sm example" style="border-radius: 20px;">
+                                     <option value="">Ratings</option>
+                                     <option value="5">5 Stars</option>
+                                     <option value="4">4 Stars</option>
+                                     <option value="3">3 Stars</option>
+                                     <option value="2">2 Stars</option>
+                                     <option value="1">1 Star</option>
+                                 </select>
+                             </div>
+                             <div class="col">
+                                 <select id="classes-filter" class="form-select form-select-sm" aria-label=".form-select-sm example" style="border-radius: 20px;">
+                                     <option value="">Classes</option>
+                                     <option value="yoga">Yoga</option>
+                                     <option value="pilates">Pilates</option>
+                                     <option value="zumba">Zumba</option>
+                                     <option value="spinning">Spinning</option>
+                                     <option value="aerobics">Aerobics</option>
+                                 </select>
+                             </div>
+                             <div class="col">
+                                 <select id="amenities-filter" class="form-select form-select-sm" aria-label=".form-select-sm example" style="border-radius: 20px;">
+                                     <option value="">Amenities</option>
+                                     <option value="pool">Pool</option>
+                                     <option value="sauna">Sauna</option>
+                                     <option value="steam-room">Steam Room</option>
+                                     <option value="group-classes">Group Classes</option>
+                                     <option value="personal-training">Personal Training</option>
+                             </select>
+                             </div>
+                           </div>
+                           <div class="row py-2 mb-2">
+                             <hr class="thick-line">
+                             <div class="container" style="height: 520px; overflow-y: scroll;">
+                                {% for gym in gyms %}
+                                 <div class="card mb-3" style="max-width: 540px;">
+                                     <div class="row g-0">
+                                        <div class="col-md-4">
+                                            <a href="#" class="card-link">
+                                                {% if gym.img %}
+                                                <img src="https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={{ gym.img }}&key=AIzaSyBS2ButcwA-Kr8IPPJ0ejaO7EdyyblTrnU" class="img-fluid rounded-start card-img-fill" alt="{{gym.name}}">
+                                                {% else %}
+                                                <img class="img-fluid rounded-start card-img-fill" src="{% static 'img/gym-3.jpg' %}" alt="{{gym.name}}">
+                                                {% endif %}
+                                            </a>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="card-body">
+                                                <a href="#" class="card-link">
+                                                    <h5 class="card-title">{{ gym.name }}</h5>
+                                                </a>
+                                                <p class="card-subtitle mb-2 text-muted">
+                                                    <div class="mb-3">
+                                                        {{ gym.rating_stars|safe }} <!-- Use safe filter to render HTML content -->
+                                                    </div>
+                                                </p>
+                                                <p class="card-text">{{gym.description}}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                     <div class="row g-0">
+                                       <div class="card-footer bg-transparent">
+                                         <div class="row justify-content-center">
+                                           <div class="col mb-2">
+                                            <a href="#" class="btn btn-primary rounded-pill w-100" onclick="showDirections('{{ gym.name }}', '{{ gym.address }}')">
+                                                <i class="fas fa-map-marked-alt me-2"></i> Directions
+                                            </a>
+                                           </div>
+                                           <div class="col mb-2">
+                                            <button type="button" class="btn btn-primary rounded-pill btn-sm w-100" id="exploreButton">
+                                              <i class="fas fa-binoculars me-2"></i> Explore
+                                            </button>
+                                           </div>
+                                           <div class="col mb-2">
+                                             <button type="button" class="btn btn-primary rounded-pill btn-sm w-100 " id="walkinButton">
+                                               <i class="fas fa-walking me-2"></i> Walk-in
+                                             </button>
+                                           </div>
+                                         </div>
+                                       </div>                                      
+                                     </div>
+                                   </div>
+                                {% endfor %}
+                             </div>
+                         </div>
+                         </div>
+                         </div>
+                         <div class="col-sm-7 pt-lg-4 mt-lg-4">
+                             <div class="container-fliud">
+                                 <div class="card" style="height: 700px; border-radius: 10px;">
+                                  {% for gym in gyms  %}
+                                     <div class="card-body">
+                                      <div class="gym-details" id="gymDetails{{ forloop.counter }}" style="display: none;">
+                                        <!-- Gym details container -->
+                                         <div id="gymDetailsContainer">
+                                             <div id="cardGymDisplay" class="card-gym-display position-relative" style="display: none;">
+                                                 <div class="row mb-4">
+                                                   <button class="btn-close position-absolute btn-sm top-0 end-0" id="closeButton" aria-label="Close"></button>
+                                                 </div>
+                                                 <div id="carouselExampleControlsNoTouching" class="carousel slide" data-bs-touch="false" data-bs-interval="false">
+                                                   <div class="carousel-inner">
+                                                     <div class="carousel-item active">
+                                                       <div class="row">
+                                                         <div class="col-md-6">
+                                                           <img src="{% static 'img/gym-1.jpg' %}" class="carousel-img-gym-display" alt="...">
+                                                         </div>
+                                                         <div class="col-md-6">
+                                                           <img src="{% static 'img/gym-2.jpg' %}" class="carousel-img-gym-display" alt="...">
+                                                         </div>
+                                                       </div>
+                                                     </div>
+                                                     <div class="carousel-item">
+                                                       <div class="row">
+                                                         <div class="col-md-6">
+                                                           <img src="{% static 'img/gym-3.jpg' %}" class="carousel-img-gym-display" alt="...">
+                                                         </div>
+                                                         <!-- Add another column with the fourth image -->
+                                                         <div class="col-md-6">
+                                                           <img src="{% static 'img/gym-4.jpg' %}" class="carousel-img-gym-display" alt="...">
+                                                         </div>
+                                                       </div>
+                                                     </div>
+                                                   </div>
+                                                   <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControlsNoTouching" data-bs-slide="prev">
+                                                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                     <span class="visually-hidden">Previous</span>
+                                                   </button>
+                                                   <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControlsNoTouching" data-bs-slide="next">
+                                                     <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                     <span class="visually-hidden">Next</span>
+                                                   </button>
+                                                 </div>
+                                                 <div class="card-body-gym-display">
+                                                   <!-- Gym Name -->
+                                                   <h5 class="card-title mt-3 m-0">{{gym.name}}</h5>
+                                                   <p class="text-muted m-0" id="ratingStars">{{ gym.rating_stars|safe }}</p>
+                                                   <h6 class="mt-4"><b>Operating Hours:</b></h6><p>{{gym.opening_hours}}</p>
+                                                   {% if gym.opening_status == "Closed"  %}
+                                                   <p class="m-0 mb-2" style="color:red;">{{gym.opening_status}}</p>
+                                                   {% else %}
+                                                   <p class="m-0 mb-2" style="color:green;">{{gym.opening_status}}</p>
+                                                   {% endif %}
+                                                   <!-- Action Buttons -->
+                                                   <div class="row g-0 mt-3">
+                                                     <div class="col me-3 mb-2">
+                                                       <button type="button" class="btn btn-sm btn-outline-primary me-2 rounded-pill" id="messageButton">
+                                                         <i class="far fa-envelope me-2"></i> Message
+                                                       </button>
+                                                       <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" id="bookButton">
+                                                         <i class="fas fa-binoculars me-2"></i> Book
+                                                       </button>
+                                                     </div>
+                                                   </div>
+                                                   <hr>
+                                                   <!-- Nav Links -->
+                                                   <ul class="nav " id="pills-tab" role="tablist">
+                                                     <li class="nav-item" role="presentation">
+                                                       <a class="nav-link active me-5" id="pills-home-tab" data-bs-toggle="pill" href="#pills-home" role="tab" aria-controls="pills-home" aria-selected="true">Gym Details</a>
+                                                     </li>
+                                                     <li class="nav-item" role="presentation">
+                                                       <a class="nav-link me-5" id="pills-profile-tab" data-bs-toggle="pill" href="#pills-profile" role="tab" aria-controls="pills-profile" aria-selected="false">Amenities</a>
+                                                     </li>
+                                                     <li class="nav-item" role="presentation">
+                                                       <a class="nav-link me-5" id="pills-contact-tab" data-bs-toggle="pill" href="#pills-contact" role="tab" aria-controls="pills-contact" aria-selected="false">Ratings</a>
+                                                     </li>
+                                                     <li class="nav-item" role="presentation">
+                                                       <a class="nav-link me-5" id="pills-photos-tab" data-bs-toggle="pill" href="#pills-photos" role="tab" aria-controls="pills-photos" aria-selected="false">Photos</a>
+                                                     </li>
+                                                   </ul>
+                                                   <hr>
+                                                   <!-- Tab Content -->
+                                                   <div class="tab-content" id="pills-tabContent">
+                                                     <!-- Gym Details Tab Pane -->
+                                                     <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
+                                                       
+                                                       <!-- Gym Description -->
+                                                       <p class="card-text">CardioFit Gym is a state-of-the-art fitness facility offering a wide range of amenities and services to help you achieve your fitness goals.</p>
+                                                       <!-- Contact Information -->
+                                                       <h6 class="mt-4">Contact:</h6>
+                                                       <ul>
+                                                         <li>Phone: +1 (123) 456-7890</li>
+                                                         <li>Email: info@cardiofitgym.com</li>
+                                                         <li>Website: www.cardiofitgym.com</li>
+                                                       </ul>
+                                                       <!-- Address -->
+                                                       <h6 class="mt-4">Address:</h6>
+                                                       <p>123 Fitness Street, Cityville, State, ZIP</p>
+                                                     </div>
+                                                 
+                                                     <!-- Amenities Tab Pane -->
+                                                     <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+                                                       <h6 class="mt-4">Amenities:</h6>
+                                                       <ul>
+                                                         <li>Modern Cardio Equipment</li>
+                                                         <li>Strength Training Area</li>
+                                                         <li>Group Exercise Classes</li>
+                                                         <li>Swimming Pool</li>
+                                                         <li>Spa and Sauna</li>
+                                                       </ul>
+                                                     </div>
+ 
+                                                     <!-- Ratings Tab Pane -->
+                                                     <div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">
+                                                       <p>4.8 out of 5 stars (Based on 1000+ reviews)</p>
+                                                     </div>
+                                                     <!-- Photos Tab Pane -->
+                                                     <div class="tab-pane fade" id="pills-photos" role="tabpanel" aria-labelledby="pills-photos-tab">
+                                                       <!-- ... (photos content here) ... -->
+                                                     </div>
+                                                   </div>
+                                                  <h6 class="mt-4">Classes Offered:</h6>
+                                                   <ul>
+                                                     <li>Yoga</li>
+                                                     <li>Zumba</li>
+                                                     <li>Excercises</li>
+                                                   </ul>
+                                                   
+                                                   
+                                               </div>
+                                         </div>
+                                     </div>
+                                    </div>
+                                 </div>
+                                {% endfor %}
+                             </div>
+                             <!-- Map display ---->
+                             <div id="map"></div>
+                         </div>
+                   </div>
+             </div>
+         </div>
+    </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const exploreButtons = document.querySelectorAll(".explore-button");
+      const gymDetailsContainers = document.querySelectorAll(".gym-details");
+
+      function hideAllGymDetails() {
+          gymDetailsContainers.forEach(container => {
+              container.style.display = "none";
+          });
+      }
+
+      exploreButtons.forEach((button, index) => {
+          button.addEventListener("click", function () {
+              hideAllGymDetails();
+              gymDetailsContainers[index].style.display = "block";
+          });
+      });
+  });
+</script>
+<script>  
+    var locationRetrieved = {% if locationRetrieved %}true{% else %}false{% endif %};
+    
+    function getLocation() {
+    if (locationRetrieved === false) {
+        locationRetrieved = true;
+        
+        if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition);
+        }  
+    }
+    }
+    
+    function showPosition(position) {
+    var lat = position.coords.latitude;  
+    var lng = position.coords.longitude;  
+    
+    window.location.href = "?lat=" + lat + "&lng=" + lng + "&retrieved=true";
+    }
+    
+    getLocation();
+    </script>
+    <script>
+        function showDirections(name, address) {
+          var url = "https://www.google.com/maps/dir/?api=1&destination=" + name + "+" + address;   
+          window.open(url, "_blank");   
+        }  
+        </script>
+{% endblock content %}
